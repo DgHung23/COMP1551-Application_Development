@@ -2,5 +2,6 @@
   <Project Path="MVCConsoleApp.BusinessLogic/MVCConsoleApp.BusinessLogic.csproj" />
   <Project Path="MVCConsoleApp.Data/MVCConsoleApp.Data.csproj" />
   <Project Path="MVCConsoleApp.Presentation/MVCConsoleApp.Presentation.csproj" />
+  <Project Path="MVCConsoleApp.Tests/MVCConsoleApp.Tests.csproj" />
   <Project Path="MVCConsoleApp.WindowsForm/MVCConsoleApp.WindowsForm.csproj" Id="6e16beee-460a-42c3-b37d-395e1824c8b6" />
 </Solution>
