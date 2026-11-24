@@ -206,6 +206,13 @@ namespace MVCConsoleApp.Presentation.Views
             {
                 throw new EndOfInputException();
             }
+
+            // When the input comes from a file (scripted test or demo run) the typed text is
+            // not shown by the console, so echo it to keep the transcript readable.
+            if (Console.IsInputRedirected)
+            {
+                Console.WriteLine(line);
+            }
             line = line.Trim();
             if (line.Equals(CancelKeyword, StringComparison.OrdinalIgnoreCase))
             {
