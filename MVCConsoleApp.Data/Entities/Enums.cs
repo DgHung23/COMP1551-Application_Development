@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : Enums.cs
+// Layer   : Data layer - MODEL (MVC): domain entities
+// Summary : The three user groups managed by the system.
+// =====================================================================
+
 namespace MVCConsoleApp.Data.Entities
 {
     /// <summary>

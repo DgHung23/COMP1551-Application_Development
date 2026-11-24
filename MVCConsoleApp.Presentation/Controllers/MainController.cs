@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : MainController.cs
+// Layer   : Presentation layer (console) - CONTROLLER (MVC)
+// Summary : CONTROLLER (MVC) - the main menu loop.
+// =====================================================================
+
 using MVCConsoleApp.Data;
 using MVCConsoleApp.Presentation.Views;
 
@@ -29,15 +36,22 @@ namespace MVCConsoleApp.Presentation.Controllers
         /// <summary>Runs the application until the user chooses 0 (Exit).</summary>
         public void Run()
         {
+            // Show the banner once, then loop until the user chooses Exit.
             _menuView.ShowWelcome();
 
+            // Main loop: every iteration shows the menu and runs exactly one action.
+            // The try/catch around each iteration guarantees that one failed action
+            // never terminates the whole application.
             while (true)
             {
                 try
                 {
                     _menuView.ShowMainMenu();
+                    // AskChoice keeps asking until a number from 0 to 10 is typed,
+                    // so an invalid menu choice (e.g. "abc" or 99) can never crash the program.
                     int choice = _menuView.AskChoice(0, MenuView.MainMenuMaxOption);
 
+                    // 0 = Exit: ask for confirmation so the program is not closed by accident.
                     if (choice == 0)
                     {
                         if (_menuView.Confirm("Do you really want to exit?", defaultAnswer: true))
@@ -48,6 +62,7 @@ namespace MVCConsoleApp.Presentation.Controllers
                         continue;
                     }
 
+                    // Any other valid number runs the matching feature.
                     Dispatch(choice);
                 }
                 catch (InputCancelledException)
@@ -60,6 +75,8 @@ namespace MVCConsoleApp.Presentation.Controllers
                     // The input stream was closed (Ctrl+Z or end of a redirected file): exit cleanly.
                     return;
                 }
+                // The database is unreachable or a SQL error occurred: explain it in plain
+                // language and return to the menu instead of crashing.
                 catch (DataAccessException ex)
                 {
                     _menuView.WriteError(ex.Message);
@@ -74,6 +91,7 @@ namespace MVCConsoleApp.Presentation.Controllers
 
                 try
                 {
+                    // Wait for Enter so the user can read the result before the menu is shown again.
                     _menuView.Pause();
                 }
                 catch (EndOfInputException)
@@ -87,6 +105,8 @@ namespace MVCConsoleApp.Presentation.Controllers
         /// <param name="choice">A valid menu option (1-10).</param>
         private void Dispatch(int choice)
         {
+            // Options 1-5 are the core requirements of the brief, 6-10 are the extension features.
+            // Each option is a single call, which keeps the main controller small and readable.
             switch (choice)
             {
                 case 1: _personController.AddPerson(); break;

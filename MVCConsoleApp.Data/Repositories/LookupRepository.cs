@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : LookupRepository.cs
+// Layer   : Data Access layer - repositories (all SQL lives here)
+// Summary : DATA ACCESS LAYER - contract for the two lookup lists (genres and product categories).
+// =====================================================================
+
 using Microsoft.Data.SqlClient;
 using MVCConsoleApp.Data.Entities;
 
@@ -42,6 +49,8 @@ namespace MVCConsoleApp.Data.Repositories
         /// <param name="kind">Which list to read.</param>
         public List<LookupItem> GetAll(LookupKind kind)
         {
+            // Count how many ACTIVE people use each item (LEFT JOIN keeps unused items with 0).
+            // Table/column names come from the fixed Tables map, user input only goes in parameters.
             TableInfo t = Tables[kind];
             string sql =
                 $"SELECT l.{t.IdColumn} AS Id, l.{t.NameColumn} AS Name, COUNT(p.PersonId) AS UsageCount " +
@@ -59,6 +68,7 @@ namespace MVCConsoleApp.Data.Repositories
         public LookupItem? GetByName(LookupKind kind, string name)
         {
             TableInfo t = Tables[kind];
+            // Case-insensitive comparison so "rock" finds "Rock".
             string sql = $"SELECT {t.IdColumn} AS Id, {t.NameColumn} AS Name, 0 AS UsageCount " +
                          $"FROM {t.Table} WHERE LOWER({t.NameColumn}) = LOWER(@name)";
             return QueryItems(kind, sql, command => command.Parameters.AddWithValue("@name", name.Trim()),
@@ -76,6 +86,7 @@ namespace MVCConsoleApp.Data.Repositories
             {
                 using (SqlConnection connection = OpenConnection())
                 using (SqlCommand command = new SqlCommand(
+                    // OUTPUT INSERTED returns the IDENTITY value generated for the new row.
                     $"INSERT INTO {t.Table} ({t.NameColumn}) OUTPUT INSERTED.{t.IdColumn} VALUES (@name)", connection))
                 {
                     command.Parameters.AddWithValue("@name", name.Trim());
@@ -102,6 +113,8 @@ namespace MVCConsoleApp.Data.Repositories
             {
                 using (SqlConnection connection = OpenConnection())
                 using (SqlCommand command = new SqlCommand(
+                    // The NOT EXISTS condition makes the DELETE affect 0 rows when the item is still
+                    // linked to somebody, so the caller gets "false" instead of a foreign-key error.
                     $"DELETE FROM {t.Table} WHERE {t.IdColumn} = @id " +
                     $"AND NOT EXISTS (SELECT 1 FROM {t.LinkTable} WHERE {t.IdColumn} = @id)", connection))
                 {
@@ -129,6 +142,7 @@ namespace MVCConsoleApp.Data.Repositories
                     {
                         while (reader.Read())
                         {
+                            // Map the current row to a LookupItem.
                             result.Add(new LookupItem
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -140,6 +154,7 @@ namespace MVCConsoleApp.Data.Repositories
                     }
                 }
             }
+            // Report which operation failed without exposing SqlException to upper layers.
             catch (SqlException ex)
             {
                 throw Wrap(operation, ex);

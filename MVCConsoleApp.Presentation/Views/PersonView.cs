@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : PersonView.cs
+// Layer   : Presentation layer (console) - VIEW (MVC)
+// Summary : VIEW (MVC) - everything the user sees or types about people: tables, the details card and
+// =====================================================================
+
 using System.Globalization;
 using MVCConsoleApp.Data.Entities;
 
@@ -32,11 +39,13 @@ namespace MVCConsoleApp.Presentation.Views
                 return;
             }
 
+            // Common columns first, then the optional cost column, then the summary column.
             var headers = new List<string> { "ID", "Name", "Role", "Email", "Telephone" };
             if (showCost) headers.Add("Est. cost");
             headers.Add("Details");
 
             var rows = new List<IReadOnlyList<string>>();
+            // One row per person; RoleDetails is produced by the object itself (polymorphism).
             foreach (Person person in people)
             {
                 var row = new List<string> { person.PersonId.ToString(), person.FullName, person.RoleName, person.Email, person.Telephone };
@@ -65,6 +74,7 @@ namespace MVCConsoleApp.Presentation.Views
             }
 
             var headers = new List<string> { "ID", "Name", "Email", "Telephone" };
+            // Everybody in the list has the same role, so the first person gives the column names.
             headers.AddRange(people[0].DescribeRoleFields().Select(field => field.Key));
 
             var rows = new List<IReadOnlyList<string>>();
@@ -89,6 +99,7 @@ namespace MVCConsoleApp.Presentation.Views
                 return;
             }
 
+            // The recycle bin shows when each record was deleted instead of the role details.
             var headers = new List<string> { "ID", "Name", "Role", "Email", "Deleted at" };
             var rows = people
                 .Select(p => (IReadOnlyList<string>)new List<string>
@@ -107,6 +118,7 @@ namespace MVCConsoleApp.Presentation.Views
         public void ShowPersonDetails(Person person, string title = "Record details")
         {
             WriteTitle(title);
+            // Common fields (an unsaved record has PersonID 0 and is shown as "(new)").
             WriteField("PersonID", person.PersonId == 0 ? "(new)" : person.PersonId.ToString());
             WriteField("Name", person.FullName);
             WriteField("Role", person.RoleName);
@@ -145,6 +157,7 @@ namespace MVCConsoleApp.Presentation.Views
                 {
                     return current.Value;
                 }
+                // Only 1, 2 or 3 are accepted - Enum.IsDefined rejects any other number.
                 if (int.TryParse(input, out int value) && Enum.IsDefined(typeof(PersonRole), value))
                 {
                     return (PersonRole)value;
@@ -165,6 +178,7 @@ namespace MVCConsoleApp.Presentation.Views
                 {
                     return current.Value;
                 }
+                // Accept the number or the name of the type (FullTime / PartTime).
                 if (input == "1" || input.Equals("fulltime", StringComparison.OrdinalIgnoreCase)) return EmploymentType.FullTime;
                 if (input == "2" || input.Equals("parttime", StringComparison.OrdinalIgnoreCase)) return EmploymentType.PartTime;
                 WriteError("Please enter 1 (FullTime) or 2 (PartTime).");
@@ -202,6 +216,7 @@ namespace MVCConsoleApp.Presentation.Views
                 // Re-use the exact spelling of an existing name ("rock" -> "Rock") to keep the list tidy.
                 names = names.Select(name => available.FirstOrDefault(a => a.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? name).ToList();
 
+                // The Business layer checks the number of items, duplicates and invalid characters.
                 string? error = validate(names);
                 if (error == null)
                 {

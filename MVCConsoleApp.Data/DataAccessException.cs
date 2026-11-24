@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : DataAccessException.cs
+// Layer   : Data Access layer - configuration and error handling
+// Summary : Exception thrown by the Data Access layer whenever a database operation fails.
+// =====================================================================
+
 namespace MVCConsoleApp.Data
 {
     /// <summary>

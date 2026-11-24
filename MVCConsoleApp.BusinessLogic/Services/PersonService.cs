@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : PersonService.cs
+// Layer   : Business layer - application services
+// Summary : BUSINESS LAYER - contract of the person service used by both user interfaces
+// =====================================================================
+
 using MVCConsoleApp.BusinessLogic.Common;
 using MVCConsoleApp.BusinessLogic.Validation;
 using MVCConsoleApp.Data;
@@ -101,12 +108,14 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public List<Person> GetAll()
         {
+            // No business rule applies to listing: simply delegate to the Data layer.
             return _repository.GetAll();
         }
 
         /// <inheritdoc />
         public List<Person> GetByRole(PersonRole role)
         {
+            // Filtering by role is done in SQL, so only the needed rows are transferred.
             return _repository.GetByRole(role);
         }
 
@@ -127,6 +136,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public List<Person> GetDeleted()
         {
+            // The recycle bin = every soft-deleted record.
             return _repository.GetDeleted();
         }
 
@@ -143,6 +153,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
                 SortField.EstimatedCost => people.OrderBy(p => p.EstimateCost()),   // polymorphic call
                 _ => people.OrderBy(p => p.PersonId)
             };
+            // Materialise the ordered sequence into a new list (the input list is not modified).
             List<Person> result = ordered.ThenBy(p => p.PersonId).ToList();
 
             if (descending)
@@ -163,6 +174,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
                 return OperationResult.Fail(formatError);
             }
 
+            // Look for ANY record (active or deleted) that already owns this email address.
             Person? owner = _repository.GetByEmail(email);
             if (owner == null || owner.PersonId == excludePersonId)
             {
@@ -261,6 +273,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public OperationResult Delete(int personId)
         {
+            // Edit/delete must handle an ID that does not exist gracefully (brief requirement).
             Person? person = GetById(personId);
             if (person == null)
             {
@@ -275,6 +288,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public OperationResult Restore(int personId)
         {
+            // Only a record that is really in the recycle bin can be restored.
             Person? person = personId > 0 ? _repository.GetById(personId, includeDeleted: true) : null;
             if (person == null || !person.IsDeleted)
             {
@@ -289,6 +303,8 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public OperationResult DeletePermanently(int personId)
         {
+            // Two-step deletion protects against accidents: a record must be soft-deleted
+            // (moved to the recycle bin) before it can be removed for ever.
             Person? person = personId > 0 ? _repository.GetById(personId, includeDeleted: true) : null;
             if (person == null || !person.IsDeleted)
             {

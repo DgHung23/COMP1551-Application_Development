@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : CrewMember.cs
+// Layer   : Data layer - MODEL (MVC): domain entities
+// Summary : MODEL (MVC) - a crew member (stage, sound, lighting, security or volunteer).
+// =====================================================================
+
 namespace MVCConsoleApp.Data.Entities
 {
     /// <summary>

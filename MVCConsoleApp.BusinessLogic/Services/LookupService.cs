@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : LookupService.cs
+// Layer   : Business layer - application services
+// Summary : BUSINESS LAYER - contract for managing the genre and product-category lists.
+// =====================================================================
+
 using MVCConsoleApp.BusinessLogic.Common;
 using MVCConsoleApp.BusinessLogic.Validation;
 using MVCConsoleApp.Data.Entities;
@@ -37,6 +44,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <param name="repository">Repository used to store lookup items.</param>
         public LookupService(ILookupRepository repository)
         {
+            // Fail fast if no repository is supplied.
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
@@ -49,6 +57,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public OperationResult Add(LookupKind kind, string name)
         {
+            // 1) The name must be valid (no commas, not too long ...).
             string label = DisplayName(kind);
 
             string? error = FieldRules.CheckLookupName(name);
@@ -56,11 +65,13 @@ namespace MVCConsoleApp.BusinessLogic.Services
             {
                 return OperationResult.Fail($"The {label} was not added.", new[] { error });
             }
+            // 2) Names must be unique (case-insensitive): "rock" and "Rock" are the same genre.
             if (_repository.GetByName(kind, name) != null)
             {
                 return OperationResult.Fail($"The {label} '{name.Trim()}' already exists.");
             }
 
+            // 3) Save the new item and report its generated ID.
             int id = _repository.Create(kind, name.Trim());
             return OperationResult.Ok($"{Capitalise(label)} '{name.Trim()}' added (ID {id}).");
         }
@@ -69,11 +80,13 @@ namespace MVCConsoleApp.BusinessLogic.Services
         public OperationResult Delete(LookupKind kind, int id)
         {
             string label = DisplayName(kind);
+            // Find the item together with its usage count (how many ACTIVE people use it).
             LookupItem? item = _repository.GetAll(kind).FirstOrDefault(i => i.Id == id);
             if (item == null)
             {
                 return OperationResult.Fail($"No {label} with ID {id} was found.");
             }
+            // Business rule: an item in use cannot be deleted, otherwise people would lose data.
             if (item.UsageCount > 0)
             {
                 return OperationResult.Fail($"'{item.Name}' is used by {item.UsageCount} record(s) and cannot be deleted.");

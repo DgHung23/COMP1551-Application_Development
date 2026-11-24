@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : Person.cs
+// Layer   : Data layer - MODEL (MVC): domain entities
+// Summary : MODEL (MVC) - abstract base class for every person involved in delivering the festival.
+// =====================================================================
+
 using System.Globalization;
 
 namespace MVCConsoleApp.Data.Entities

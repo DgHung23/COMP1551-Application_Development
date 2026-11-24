@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : FieldRules.cs
+// Layer   : Business layer - business rules and validation
+// Summary : BUSINESS LAYER - validation of single fields.
+// =====================================================================
+
 using System.Text.RegularExpressions;
 using MVCConsoleApp.Data.Entities;
 
@@ -36,6 +43,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <summary>Checks a person's full name: required, 2-100 characters, sensible characters only.</summary>
         public static string? CheckName(string? name)
         {
+            // Trim first so "   " counts as empty, then check each rule in turn.
             string value = (name ?? string.Empty).Trim();
             if (value.Length == 0) return "Name is required.";
             if (value.Length < 2) return "Name must have at least 2 characters.";
@@ -53,6 +61,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <summary>Checks a telephone number: required, optional '+', 8-15 digits.</summary>
         public static string? CheckTelephone(string? telephone)
         {
+            // Ignore formatting characters, so "07700 900-101" is accepted.
             string value = NormaliseTelephone(telephone);
             if (value.Length == 0) return "Telephone is required.";
             if (!TelephonePattern.IsMatch(value)) return "Telephone must contain 8 to 15 digits (optionally starting with +), e.g. 07700900123.";
@@ -62,6 +71,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <summary>Checks the FORMAT of an email address (uniqueness is checked by the service).</summary>
         public static string? CheckEmailFormat(string? email)
         {
+            // Required, not too long, and shaped like name@domain.tld.
             string value = (email ?? string.Empty).Trim();
             if (value.Length == 0) return "Email is required.";
             if (value.Length > Person.MaxEmailLength) return $"Email cannot be longer than {Person.MaxEmailLength} characters.";
@@ -95,6 +105,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// </summary>
         public static string? CheckWeeklyHours(EmploymentType type, int weeklyHours)
         {
+            // The allowed range depends on the employment type (FullTime 25-40, PartTime 1-24).
             (int min, int max) = BusinessRules.GetWeeklyHoursRange(type);
             if (weeklyHours < min || weeklyHours > max)
             {
@@ -106,6 +117,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <summary>Checks a vendor (stall) name: required, max 100 characters.</summary>
         public static string? CheckStallName(string? stallName)
         {
+            // The vendor name is required and must fit the NVARCHAR(100) column.
             string value = (stallName ?? string.Empty).Trim();
             if (value.Length == 0) return "Vendor name is required.";
             if (value.Length > Vendor.MaxStallNameLength) return $"Vendor name cannot be longer than {Vendor.MaxStallNameLength} characters.";
@@ -115,6 +127,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <summary>Checks one genre or category name.</summary>
         public static string? CheckLookupName(string? name)
         {
+            // Genre / category names: required, max 50 characters, safe characters only.
             string value = (name ?? string.Empty).Trim();
             if (value.Length == 0) return "Name is required.";
             if (value.Length > LookupItem.MaxNameLength) return $"'{value}' is longer than {LookupItem.MaxNameLength} characters.";
@@ -125,20 +138,20 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <summary>Checks the genre list of a performer: exactly <see cref="BusinessRules.RequiredGenreCount"/> different, valid genres.</summary>
         public static string? CheckGenres(IEnumerable<string>? genres)
         {
-            return CheckNameList(genres, BusinessRules.RequiredGenreCount, "genre");
+            return CheckNameList(genres, BusinessRules.RequiredGenreCount, "genre", "genres");
         }
 
         /// <summary>Checks the category list of a vendor: exactly <see cref="BusinessRules.RequiredCategoryCount"/> different, valid categories.</summary>
         public static string? CheckCategories(IEnumerable<string>? categories)
         {
-            return CheckNameList(categories, BusinessRules.RequiredCategoryCount, "product category");
+            return CheckNameList(categories, BusinessRules.RequiredCategoryCount, "product category", "product categories");
         }
 
         /// <summary>
         /// Shared logic for genres and categories: validates every name, then checks that the
         /// number of DIFFERENT names (ignoring case) is exactly <paramref name="requiredCount"/>.
         /// </summary>
-        private static string? CheckNameList(IEnumerable<string>? names, int requiredCount, string itemName)
+        private static string? CheckNameList(IEnumerable<string>? names, int requiredCount, string itemName, string pluralName)
         {
             List<string> cleaned = (names ?? Enumerable.Empty<string>())
                 .Select(name => (name ?? string.Empty).Trim())
@@ -152,6 +165,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
                 if (error != null) return error;
             }
 
+            // Count DIFFERENT names ignoring case, so "Rock, rock" is detected as a duplicate.
             int distinctCount = cleaned.Distinct(StringComparer.OrdinalIgnoreCase).Count();
             if (distinctCount != cleaned.Count)
             {
@@ -159,7 +173,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
             }
             if (distinctCount != requiredCount)
             {
-                return $"Exactly {requiredCount} different {itemName}s are required (you entered {distinctCount}).";
+                return $"Exactly {requiredCount} different {pluralName} are required (you entered {distinctCount}).";
             }
             return null;
         }

@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : DbConfig.cs
+// Layer   : Data Access layer - configuration and error handling
+// Summary : Central place for database configuration used by every repository.
+// =====================================================================
+
 namespace MVCConsoleApp.Data
 {
     /// <summary>

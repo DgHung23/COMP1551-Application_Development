@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : IPersonRepository.cs
+// Layer   : Data Access layer - repositories (all SQL lives here)
+// Summary : DATA ACCESS LAYER - contract for storing and loading people.
+// =====================================================================
+
 using MVCConsoleApp.Data.Entities;
 
 namespace MVCConsoleApp.Data.Repositories

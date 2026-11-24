@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : Performer.cs
+// Layer   : Data layer - MODEL (MVC): domain entities
+// Summary : MODEL (MVC) - a performer (artist or DJ). Inherits the common fields from Person
+// =====================================================================
+
 namespace MVCConsoleApp.Data.Entities
 {
     /// <summary>

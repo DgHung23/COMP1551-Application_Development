@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : ReportView.cs
+// Layer   : Presentation layer (console) - VIEW (MVC)
+// Summary : VIEW (MVC) - prints reports and the result of operations.
+// =====================================================================
+
 using MVCConsoleApp.BusinessLogic.Services;
 using MVCConsoleApp.Data.Entities;
 
@@ -22,8 +29,10 @@ namespace MVCConsoleApp.Presentation.Views
             }
 
             var rows = lines
+                // Convert each report line into the text cells of one table row.
                 .Select(l => (IReadOnlyList<string>)new List<string> { l.GroupName, l.Count.ToString(), l.Members })
                 .ToList();
+            // Columns: group name, number of people, and the names of those people.
             WriteTable(new[] { groupLabel, "Count", "Members" }, rows);
         }
 
@@ -34,6 +43,7 @@ namespace MVCConsoleApp.Presentation.Views
             var rows = lines
                 .Select(l => (IReadOnlyList<string>)new List<string>
                 {
+                    // Money is formatted with Person.FormatMoney so it looks the same everywhere.
                     l.Role, l.Count.ToString(), Person.FormatMoney(l.TotalCost), Person.FormatMoney(l.AverageCost), l.Basis
                 })
                 .ToList();

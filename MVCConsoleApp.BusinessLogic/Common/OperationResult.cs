@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : OperationResult.cs
+// Layer   : Business layer - shared types
+// Summary : BUSINESS LAYER - the outcome of an operation that changes data (add, edit, delete ...).
+// =====================================================================
+
 namespace MVCConsoleApp.BusinessLogic.Common
 {
     /// <summary>

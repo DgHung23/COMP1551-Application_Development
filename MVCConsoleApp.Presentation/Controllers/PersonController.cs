@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : PersonController.cs
+// Layer   : Presentation layer (console) - CONTROLLER (MVC)
+// Summary : CONTROLLER (MVC) - handles the menu actions about people: add, view all, view by role,
+// =====================================================================
+
 using MVCConsoleApp.BusinessLogic.Common;
 using MVCConsoleApp.BusinessLogic.Services;
 using MVCConsoleApp.BusinessLogic.Validation;
@@ -24,6 +31,8 @@ namespace MVCConsoleApp.Presentation.Controllers
         /// <summary>Creates the controller with its services and view (injected by Program.cs).</summary>
         public PersonController(IPersonService personService, ILookupService lookupService, PersonView view)
         {
+            // Store the injected dependencies. The controller only knows the INTERFACES of the
+            // services, not their implementation (abstraction).
             _personService = personService;
             _lookupService = lookupService;
             _view = view;
@@ -46,6 +55,7 @@ namespace MVCConsoleApp.Presentation.Controllers
             // Role-specific fields.
             Person person = AskRoleDetails(role, name, telephone, email, current: null);
 
+            // Show a summary first so the user can check the data before it is saved.
             _view.ShowPersonDetails(person, "Please review the new record");
             if (!_view.Confirm("Save this record?", defaultAnswer: true))
             {
@@ -53,6 +63,8 @@ namespace MVCConsoleApp.Presentation.Controllers
                 return;
             }
 
+            // The service validates everything again (defence in depth), checks that the email
+            // is still unique and saves the record; the view then prints the outcome.
             OperationResult<int> result = _personService.Add(person);
             _view.ShowResult(result);
         }
@@ -62,6 +74,7 @@ namespace MVCConsoleApp.Presentation.Controllers
         /// <summary>Menu option 2: lists every active record.</summary>
         public void ViewAll()
         {
+            // Load every active record from the database and print it as one table.
             _view.ShowPeopleTable(_personService.GetAll(), "All records");
         }
 
@@ -72,6 +85,8 @@ namespace MVCConsoleApp.Presentation.Controllers
         {
             _view.WriteTitle("View records by role");
             PersonRole role = _view.AskRole();
+            // Only records of the chosen role are loaded (WHERE RoleId = @roleId), and the table
+            // shows the role-specific columns of that role.
             _view.ShowRoleTable(_personService.GetByRole(role), role);
         }
 
@@ -84,6 +99,7 @@ namespace MVCConsoleApp.Presentation.Controllers
         public void EditPerson()
         {
             _view.WriteTitle("Edit a record");
+            // AskPersonId only accepts a positive whole number.
             int personId = _view.AskPersonId("edit");
 
             // Graceful handling of an ID that does not exist.
@@ -97,8 +113,10 @@ namespace MVCConsoleApp.Presentation.Controllers
             _view.ShowPersonDetails(existing, "Current values");
             _view.WriteInfo("Press Enter to keep the value shown in [brackets].");
 
+            // Each prompt shows the current value in [brackets]; pressing Enter keeps it unchanged.
             string name = _view.AskText("Full name", FieldRules.CheckName, existing.FullName);
             string telephone = _view.AskText("Telephone", FieldRules.CheckTelephone, existing.Telephone);
+            // The person may keep his/her own email: personId is excluded from the uniqueness check.
             string email = _view.AskText("Email", value => CheckEmail(value, personId), existing.Email);
 
             PersonRole role = _view.AskRole(existing.Role);
@@ -109,6 +127,7 @@ namespace MVCConsoleApp.Presentation.Controllers
 
             // When the role is unchanged the current role-specific values are offered as defaults.
             Person updated = AskRoleDetails(role, name, telephone, email, role == existing.Role ? existing : null);
+            // The new object must keep the same PersonID so that the right record is updated.
             updated.PersonId = personId;
 
             _view.ShowPersonDetails(updated, "New values");
@@ -118,6 +137,7 @@ namespace MVCConsoleApp.Presentation.Controllers
                 return;
             }
 
+            // Validate + save through the Business layer and show the outcome.
             _view.ShowResult(_personService.Update(updated));
         }
 
@@ -129,6 +149,8 @@ namespace MVCConsoleApp.Presentation.Controllers
             _view.WriteTitle("Delete a record");
             int personId = _view.AskPersonId("delete");
 
+            // Look the record up first so a wrong ID is reported clearly and the user can see
+            // exactly which record is about to be deleted.
             Person? person = _personService.GetById(personId);
             if (person == null)
             {
@@ -137,12 +159,14 @@ namespace MVCConsoleApp.Presentation.Controllers
             }
 
             _view.ShowPersonDetails(person, "Record to delete");
+            // Confirmation is required by the brief; the default answer is "No" for safety.
             if (!_view.Confirm($"Are you sure you want to delete '{person.FullName}'?", defaultAnswer: false))
             {
                 _view.WriteWarning("Deletion cancelled - nothing was deleted.");
                 return;
             }
 
+            // Soft delete: the record moves to the recycle bin and can be restored (option 10).
             _view.ShowResult(_personService.Delete(personId));
         }
 
@@ -152,6 +176,7 @@ namespace MVCConsoleApp.Presentation.Controllers
         public void Search()
         {
             _view.WriteTitle("Search");
+            // Partial, case-insensitive match on name OR email (SQL LIKE '%term%').
             string term = _view.AskText("Part of a name or email");
             _view.ShowPeopleTable(_personService.Search(term), $"Results for \"{term}\"");
         }
@@ -163,6 +188,7 @@ namespace MVCConsoleApp.Presentation.Controllers
         public void Sort(MenuView menuView)
         {
             (SortField field, bool descending) = menuView.AskSortOptions();
+            // Sorting is done by the Business layer, so the console and Windows Forms sort identically.
             List<Person> sorted = _personService.Sort(_personService.GetAll(), field, descending);
             string direction = descending ? "descending" : "ascending";
             string fieldName = field == SortField.EstimatedCost ? "estimated cost" : field.ToString();
@@ -177,6 +203,7 @@ namespace MVCConsoleApp.Presentation.Controllers
         {
             while (true)
             {
+                // Reload the recycle bin every time so the list reflects the last action.
                 List<Person> deleted = _personService.GetDeleted();
                 _view.ShowDeletedTable(deleted);
                 if (deleted.Count == 0)
@@ -190,6 +217,7 @@ namespace MVCConsoleApp.Presentation.Controllers
                     return;
                 }
 
+                // Option 1 = restore, option 2 = permanent delete (which needs a confirmation).
                 int personId = _view.AskPersonId(choice == 1 ? "restore" : "permanently delete");
                 if (choice == 1)
                 {
@@ -234,6 +262,8 @@ namespace MVCConsoleApp.Presentation.Controllers
         {
             switch (role)
             {
+                // Performer: fee + exactly 2 genres (the existing genres are listed as a hint).
+                // "old" is null when adding or when the role changed, so no default value is offered.
                 case PersonRole.Performer:
                 {
                     Performer? old = current as Performer;
@@ -244,9 +274,12 @@ namespace MVCConsoleApp.Presentation.Controllers
                         BusinessRules.RequiredGenreCount,
                         FieldRules.CheckGenres,
                         old?.Genres);
+                    // Build the concrete sub-class; its constructor runs the validating setters.
                     return new Performer(name, telephone, email, fee, genres);
                 }
 
+                // Crew: hourly rate, employment type, then weekly hours whose valid range depends
+                // on the employment type chosen just before.
                 case PersonRole.Crew:
                 {
                     CrewMember? old = current as CrewMember;
@@ -260,6 +293,7 @@ namespace MVCConsoleApp.Presentation.Controllers
                     return new CrewMember(name, telephone, email, rate, type, hours);
                 }
 
+                // Vendor: stall (business) name + exactly 3 product categories.
                 default: // PersonRole.Vendor
                 {
                     Vendor? old = current as Vendor;

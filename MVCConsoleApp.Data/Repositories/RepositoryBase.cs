@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : RepositoryBase.cs
+// Layer   : Data Access layer - repositories (all SQL lives here)
+// Summary : DATA ACCESS LAYER - abstract base class shared by every repository.
+// =====================================================================
+
 using Microsoft.Data.SqlClient;
 
 namespace MVCConsoleApp.Data.Repositories

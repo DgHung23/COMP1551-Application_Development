@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : PersonRepository.cs
+// Layer   : Data Access layer - repositories (all SQL lives here)
+// Summary : DATA ACCESS LAYER - SQL Server implementation of IPersonRepository.
+// =====================================================================
+
 using Microsoft.Data.SqlClient;
 using MVCConsoleApp.Data.Entities;
 
@@ -48,6 +55,8 @@ namespace MVCConsoleApp.Data.Repositories
             try
             {
                 using (SqlConnection connection = OpenConnection())
+                // One connection + one transaction for the whole insert: People, the sub-type
+                // table and the link tables are written together or not at all.
                 using (SqlTransaction transaction = connection.BeginTransaction())
                 {
                     try
@@ -66,6 +75,7 @@ namespace MVCConsoleApp.Data.Repositories
                         // 2) Role-specific fields (sub-type table + link tables).
                         InsertRoleDetails(connection, transaction, newId, person);
 
+                        // Every statement succeeded: make the changes permanent.
                         transaction.Commit();
                         person.PersonId = newId;
                         return newId;
@@ -89,6 +99,7 @@ namespace MVCConsoleApp.Data.Repositories
         /// <summary>Returns all active people ordered by PersonID.</summary>
         public List<Person> GetAll()
         {
+            // Active records only, in PersonID order.
             return Query("WHERE p.IsDeleted = 0 ORDER BY p.PersonId", "loading all people", null);
         }
 
@@ -107,6 +118,8 @@ namespace MVCConsoleApp.Data.Repositories
         /// <returns>The person, or null when not found.</returns>
         public Person? GetById(int personId, bool includeDeleted = false)
         {
+            // Normally only active records are found; restore / permanent delete also
+            // need to find records that are in the recycle bin.
             string where = includeDeleted
                 ? "WHERE p.PersonId = @id"
                 : "WHERE p.PersonId = @id AND p.IsDeleted = 0";
@@ -131,6 +144,8 @@ namespace MVCConsoleApp.Data.Repositories
         /// <param name="term">Text to look for anywhere in the name or email.</param>
         public List<Person> Search(string term)
         {
+            // The term is wrapped in % wildcards for a "contains" search; EscapeLike makes
+            // sure % or _ typed by the user are treated as normal characters.
             return Query("WHERE p.IsDeleted = 0 AND (p.FullName LIKE @term OR p.Email LIKE @term) ORDER BY p.PersonId",
                          "searching people",
                          command => command.Parameters.AddWithValue("@term", "%" + EscapeLike(term.Trim()) + "%"));
@@ -139,6 +154,7 @@ namespace MVCConsoleApp.Data.Repositories
         /// <summary>Returns the recycle bin: all soft-deleted people, most recently deleted first.</summary>
         public List<Person> GetDeleted()
         {
+            // Most recently deleted first.
             return Query("WHERE p.IsDeleted = 1 ORDER BY p.DeletedAt DESC", "loading the recycle bin", null);
         }
 
@@ -156,6 +172,8 @@ namespace MVCConsoleApp.Data.Repositories
             try
             {
                 using (SqlConnection connection = OpenConnection())
+                // The four steps below run in ONE transaction, so a failure in any step
+                // (e.g. a CHECK constraint) leaves the original record untouched.
                 using (SqlTransaction transaction = connection.BeginTransaction())
                 {
                     try
@@ -259,11 +277,13 @@ namespace MVCConsoleApp.Data.Repositories
             try
             {
                 using (SqlConnection connection = OpenConnection())
+                // The shared SELECT + the caller's clause; parameters are added by the callback.
                 using (SqlCommand command = new SqlCommand(SelectPeopleSql + whereClause, connection))
                 {
                     addParameters?.Invoke(command);
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
+                        // Every row becomes the right sub-class of Person (see MapPerson).
                         while (reader.Read())
                         {
                             result.Add(MapPerson(reader));
@@ -287,6 +307,7 @@ namespace MVCConsoleApp.Data.Repositories
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.Parameters.AddWithValue("@id", personId);
+                    // ExecuteNonQuery returns the number of rows changed: 0 means "ID not found".
                     return command.ExecuteNonQuery() > 0;
                 }
             }
@@ -377,6 +398,7 @@ namespace MVCConsoleApp.Data.Repositories
                 "END " +
                 $"INSERT INTO {linkTable} (PersonId, {idColumn}) VALUES (@personId, @lookupId);";
 
+            // One small batch per name: find-or-create the lookup row, then link it.
             foreach (string name in names)
             {
                 using (SqlCommand command = new SqlCommand(sql, connection, transaction))
@@ -395,12 +417,14 @@ namespace MVCConsoleApp.Data.Repositories
         /// </summary>
         private static Person MapPerson(SqlDataReader reader)
         {
+            // RoleId (1, 2 or 3) maps directly onto the PersonRole enum.
             PersonRole role = (PersonRole)reader.GetInt32(reader.GetOrdinal("RoleId"));
 
             Person person;
             switch (role)
             {
                 case PersonRole.Performer:
+                    // Performer columns: the fee + the aggregated list of genres.
                     var performer = new Performer
                     {
                         Fee = GetDecimalOrZero(reader, "Fee")
@@ -410,6 +434,7 @@ namespace MVCConsoleApp.Data.Repositories
                     break;
 
                 case PersonRole.Crew:
+                    // Crew columns are read only when present (they are NULL for other roles).
                     var crew = new CrewMember();
                     int typeOrdinal = reader.GetOrdinal("EmploymentType");
                     if (!reader.IsDBNull(typeOrdinal))
@@ -422,6 +447,7 @@ namespace MVCConsoleApp.Data.Repositories
                     break;
 
                 case PersonRole.Vendor:
+                    // Vendor columns: stall name + the aggregated list of categories.
                     var vendor = new Vendor();
                     int stallOrdinal = reader.GetOrdinal("StallName");
                     if (!reader.IsDBNull(stallOrdinal))
@@ -437,6 +463,7 @@ namespace MVCConsoleApp.Data.Repositories
             }
 
             // Common fields are filled the same way for every role.
+            // GetOrdinal finds a column by name, so the code does not depend on column order.
             person.PersonId = reader.GetInt32(reader.GetOrdinal("PersonId"));
             person.FullName = reader.GetString(reader.GetOrdinal("FullName"));
             person.Telephone = reader.GetString(reader.GetOrdinal("Telephone"));

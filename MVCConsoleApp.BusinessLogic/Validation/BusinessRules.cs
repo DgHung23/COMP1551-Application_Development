@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : BusinessRules.cs
+// Layer   : Business layer - business rules and validation
+// Summary : BUSINESS LAYER - every business rule constant in ONE place.
+// =====================================================================
+
 using MVCConsoleApp.Data.Entities;
 
 namespace MVCConsoleApp.BusinessLogic.Validation

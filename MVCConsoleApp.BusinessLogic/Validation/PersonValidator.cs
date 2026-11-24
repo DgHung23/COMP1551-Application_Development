@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : PersonValidator.cs
+// Layer   : Business layer - business rules and validation
+// Summary : BUSINESS LAYER - validates a complete Person before it is saved.
+// =====================================================================
+
 using MVCConsoleApp.Data.Entities;
 
 namespace MVCConsoleApp.BusinessLogic.Validation
@@ -84,6 +91,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <inheritdoc />
         protected override void ValidateRoleFields(Person person, List<string> errors)
         {
+            // Safe cast: a wrong type is reported as an error instead of crashing.
             Performer? performer = As<Performer>(person, errors);
             if (performer == null) return;
 
@@ -98,6 +106,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <inheritdoc />
         protected override void ValidateRoleFields(Person person, List<string> errors)
         {
+            // Safe cast to the crew type.
             CrewMember? crew = As<CrewMember>(person, errors);
             if (crew == null) return;
 
@@ -117,6 +126,7 @@ namespace MVCConsoleApp.BusinessLogic.Validation
         /// <inheritdoc />
         protected override void ValidateRoleFields(Person person, List<string> errors)
         {
+            // Safe cast to the vendor type.
             Vendor? vendor = As<Vendor>(person, errors);
             if (vendor == null) return;
 

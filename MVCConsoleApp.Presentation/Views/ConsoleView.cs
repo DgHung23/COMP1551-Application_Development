@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : ConsoleView.cs
+// Layer   : Presentation layer (console) - VIEW (MVC)
+// Summary : VIEW (MVC) - abstract base class of every console view.
+// =====================================================================
+
 using System.Globalization;
 using MVCConsoleApp.BusinessLogic.Common;
 
@@ -109,6 +116,7 @@ namespace MVCConsoleApp.Presentation.Views
         /// <summary>Writes one line in the given colour and restores the previous colour.</summary>
         protected static void WriteColoured(string text, ConsoleColor colour)
         {
+            // Remember the colour so it can be restored afterwards.
             ConsoleColor previous = Console.ForegroundColor;
             Console.ForegroundColor = colour;
             Console.WriteLine(text);
@@ -124,6 +132,7 @@ namespace MVCConsoleApp.Presentation.Views
         protected void WriteTable(IReadOnlyList<string> headers, IReadOnlyList<IReadOnlyList<string>> rows)
         {
             const int maxColumnWidth = 32;
+            // The number of columns is taken from the header row.
             int columns = headers.Count;
             int[] widths = new int[columns];
 
@@ -159,6 +168,7 @@ namespace MVCConsoleApp.Presentation.Views
         private static string Fit(string? value, int width)
         {
             value ??= string.Empty;
+            // Short values are padded with spaces; long values are cut and end with "...".
             if (value.Length <= width) return value.PadRight(width);
             return width <= 3 ? value.Substring(0, width) : value.Substring(0, width - 3) + "...";
         }
@@ -184,11 +194,13 @@ namespace MVCConsoleApp.Presentation.Views
         /// </summary>
         protected static string ReadLine(string prompt)
         {
+            // Prompts are written in white so they stand out from the program output.
             ConsoleColor previous = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(prompt);
             Console.ForegroundColor = previous;
 
+            // Console.ReadLine returns null when the input stream ends (e.g. Ctrl+Z).
             string? line = Console.ReadLine();
             if (line == null)
             {
@@ -213,6 +225,7 @@ namespace MVCConsoleApp.Presentation.Views
         {
             while (true)
             {
+                // When editing, the current value is shown in [brackets].
                 string input = ReadLine(current == null ? $"  {label}: " : $"  {label} [{current}]: ");
 
                 // Edit mode: an empty answer keeps the current value.
@@ -221,6 +234,7 @@ namespace MVCConsoleApp.Presentation.Views
                     return current;
                 }
 
+                // A new value cannot be empty; otherwise the Business-layer rule decides.
                 string? error = input.Length == 0 ? $"{label} is required." : validate?.Invoke(input);
                 if (error == null)
                 {
@@ -246,6 +260,7 @@ namespace MVCConsoleApp.Presentation.Views
                 }
 
                 // TryParse instead of Parse: invalid text never throws, the user is simply asked again.
+                // Allow the user to type the pound sign, e.g. "£1,250.50".
                 string cleaned = input.Replace("£", string.Empty).Trim();
                 if (!decimal.TryParse(cleaned, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal value))
                 {
@@ -274,6 +289,7 @@ namespace MVCConsoleApp.Presentation.Views
                 }
                 if (!int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
                 {
+                    // int.TryParse failed: letters, decimals or a number that is too big.
                     WriteError($"'{input}' is not a valid whole number.");
                     continue;
                 }
@@ -293,6 +309,7 @@ namespace MVCConsoleApp.Presentation.Views
             while (true)
             {
                 string input = ReadLine($"{prompt} ({min}-{max}): ");
+                // Accept only a whole number inside the menu range; anything else is asked again.
                 if (int.TryParse(input, out int choice) && choice >= min && choice <= max)
                 {
                     return choice;
@@ -304,10 +321,12 @@ namespace MVCConsoleApp.Presentation.Views
         /// <summary>Asks a yes/no question. Enter returns <paramref name="defaultAnswer"/>.</summary>
         public bool Confirm(string question, bool defaultAnswer = false)
         {
+            // The capital letter shows which answer Enter selects.
             string hint = defaultAnswer ? "Y/n" : "y/N";
             while (true)
             {
                 string input = ReadLine($"{question} ({hint}): ").ToLowerInvariant();
+                // Enter alone = default answer; y/yes/n/no are accepted in any letter case.
                 if (input.Length == 0) return defaultAnswer;
                 if (input == "y" || input == "yes") return true;
                 if (input == "n" || input == "no") return false;

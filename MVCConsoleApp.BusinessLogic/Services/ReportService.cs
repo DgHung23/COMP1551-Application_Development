@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : ReportService.cs
+// Layer   : Business layer - application services
+// Summary : BUSINESS LAYER - contract for the report and export extension features.
+// =====================================================================
+
 using System.Globalization;
 using System.Text;
 using MVCConsoleApp.BusinessLogic.Common;
@@ -78,9 +85,11 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public List<CostSummaryLine> GetCostSummary()
         {
+            // Work on the active records only (soft-deleted people are not costed).
             List<Person> people = _personService.GetAll();
 
             // Explanation of the cost basis for each role (shown in the report).
+            // Explain in the report how each figure is calculated, so the numbers are transparent.
             var basis = new Dictionary<PersonRole, string>
             {
                 [PersonRole.Performer] = "Agreed performance fee",
@@ -114,13 +123,16 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <inheritdoc />
         public OperationResult<string> ExportToCsv(IEnumerable<Person> people, string? filePath = null)
         {
+            // Copy to a list once so the records are enumerated a single time.
             List<Person> list = people?.ToList() ?? new List<Person>();
+            // Nothing to export: tell the user instead of creating an empty file.
             if (list.Count == 0)
             {
                 return OperationResult<string>.Fail("There are no records to export.");
             }
 
             // Default location: Documents\FestivalExports\people_yyyyMMdd_HHmmss.csv
+            // When no path is given (console version) a time-stamped file name is generated.
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FestivalExports");
@@ -129,12 +141,14 @@ namespace MVCConsoleApp.BusinessLogic.Services
 
             try
             {
+                // Make sure the target folder exists before writing the file.
                 string? directory = Path.GetDirectoryName(Path.GetFullPath(filePath));
                 if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
 
+                // Header row followed by one row per person; every value is escaped.
                 var csv = new StringBuilder();
                 csv.AppendLine("PersonID,Name,Role,Telephone,Email,Fee,Genres,HourlyRate,EmploymentType,WeeklyHours,VendorName,ProductCategories,EstimatedCost");
                 foreach (Person person in list)
@@ -143,6 +157,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
                 }
 
                 // UTF-8 WITH a byte-order mark so Excel shows accented names (e.g. Vietnamese) correctly.
+                // Write the whole file in one call.
                 File.WriteAllText(filePath, csv.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
                 return OperationResult<string>.Ok(Path.GetFullPath(filePath), $"{list.Count} record(s) exported to {Path.GetFullPath(filePath)}");
             }
@@ -155,7 +170,10 @@ namespace MVCConsoleApp.BusinessLogic.Services
         /// <summary>Builds the 13 CSV columns for one person; columns of other roles stay empty.</summary>
         private static IEnumerable<string> BuildCsvFields(Person person)
         {
+            // Invariant culture: numbers always use "." as the decimal separator in the CSV,
+            // whatever the regional settings of the computer are.
             CultureInfo invariant = CultureInfo.InvariantCulture;
+            // Role-specific columns start empty; only the columns of the person's role are filled.
             string fee = "", genres = "", rate = "", type = "", hours = "", stall = "", categories = "";
 
             // Pattern matching on the run-time type to fill the role-specific columns.
@@ -176,6 +194,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
                     break;
             }
 
+            // Same column order as the header row written by ExportToCsv.
             return new[]
             {
                 person.PersonId.ToString(invariant), person.FullName, person.RoleName, person.Telephone, person.Email,
@@ -196,6 +215,7 @@ namespace MVCConsoleApp.BusinessLogic.Services
             {
                 value = "'" + value;
             }
+            // Quote the value only when it contains a character that has a meaning in CSV.
             bool needsQuotes = value.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0;
             return needsQuotes ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;
         }

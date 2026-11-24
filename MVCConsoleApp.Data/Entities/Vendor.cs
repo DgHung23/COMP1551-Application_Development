@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : Vendor.cs
+// Layer   : Data layer - MODEL (MVC): domain entities
+// Summary : MODEL (MVC) - a vendor (food or merchandise stall). Inherits the common contact fields ...
+// =====================================================================
+
 namespace MVCConsoleApp.Data.Entities
 {
     /// <summary>

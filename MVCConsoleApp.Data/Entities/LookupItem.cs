@@ -1,3 +1,10 @@
+// =====================================================================
+// COMP1551 Application Development - Music Festival Operations System
+// File    : LookupItem.cs
+// Layer   : Data layer - MODEL (MVC): domain entities
+// Summary : MODEL (MVC) - one entry of a lookup list: a music genre or a product category.
+// =====================================================================
+
 namespace MVCConsoleApp.Data.Entities
 {
     /// <summary>
