@@ -76,6 +76,10 @@ namespace MVCConsoleApp.BusinessLogic.Validation
             if (value.Length == 0) return "Email is required.";
             if (value.Length > Person.MaxEmailLength) return $"Email cannot be longer than {Person.MaxEmailLength} characters.";
             if (!EmailPattern.IsMatch(value)) return "Email is not valid (example: name@example.com).";
+
+            // The Email column is VARCHAR: SQL Server would silently change accented letters
+            // (e.g. "josé@..." -> "jose@..."), so only plain ASCII characters are accepted.
+            if (value.Any(c => c > 127)) return "Email cannot contain accented or non-English letters.";
             return null;
         }
 

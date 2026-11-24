@@ -84,7 +84,7 @@ recompiling by setting the environment variable `FESTIVAL_DB_CONNECTION`.
 1. Open `MVCConsoleApp.slnx`.
 2. Right-click **MVCConsoleApp.Presentation** → *Set as Startup Project* → **F5** (console UI),
    or **MVCConsoleApp.WindowsForm** → *Set as Startup Project* → **F5** (Windows Forms UI).
-3. Unit tests: *Test → Run All Tests* (37 xUnit tests, no database needed).
+3. Unit tests: *Test → Run All Tests* (38 xUnit tests, no database needed).
 
 From the command line:
 

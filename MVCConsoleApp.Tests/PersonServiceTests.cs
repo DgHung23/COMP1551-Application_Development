@@ -156,6 +156,7 @@ namespace MVCConsoleApp.Tests
         [Theory]
         [InlineData("not-an-email")]
         [InlineData("missing@domain")]
+        [InlineData("josé@festival.test")]   // accented letter would be altered by the VARCHAR column
         public void Add_InvalidEmailFormat_IsRejected(string email)
         {
             // Act: call the code under test.
