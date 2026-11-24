@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Coursework brief and private report (not source code)
+*.pdf
+Report/
+
+# Runtime exports produced by the app
+exports/
+*.csv
