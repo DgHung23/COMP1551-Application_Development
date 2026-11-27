@@ -10,8 +10,8 @@
      * 2 crew                              -> 4 crew inserted
      * 2 vendors (each with 3 categories)  -> 3 vendors inserted
 
-   Explicit PersonId values are used (IDENTITY_INSERT) so that the IDs in
-   the demo video and the report are predictable.
+   Explicit PersonId values are used (IDENTITY_INSERT) so that the IDs used
+   in testing and in the report are predictable.
    All names, emails and phone numbers are fictitious.
    ===================================================================== */
 
